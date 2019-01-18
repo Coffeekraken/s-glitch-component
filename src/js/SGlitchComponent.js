@@ -1,4 +1,5 @@
 import SWebComponent from "coffeekraken-sugar/js/core/SWebComponent"
+import html2canvas from "html2canvas"
 
 export default class Component extends SWebComponent {
   /**
@@ -47,6 +48,16 @@ export default class Component extends SWebComponent {
    */
   componentMount() {
     super.componentMount()
+
+    html2canvas(this, {
+      logging: false
+    })
+      .then(canvas => {
+        document.body.appendChild(canvas)
+      })
+      .catch(error => {
+        console.warn(error)
+      })
   }
 
   /**

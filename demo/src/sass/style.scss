@@ -1,10 +1,26 @@
-@import 'node_modules/coffeekraken-sugar/index';
-@import '../../../index';
+@import "node_modules/coffeekraken-sugar/index";
+@import "node_modules/coffeekraken-s-typography-component/index";
+@import "node_modules/coffeekraken-s-button-component/index";
 
 @include s-setup(());
 @include s-init();
 @include s-classes();
 
+@include s-typography-classes();
+@include s-button-classes();
+
 body {
-	padding: s-space(bigger);
+}
+
+.header {
+  position: relative;
+  @include s-ratio(16/9);
+}
+.header__img {
+  @include s-fit(absolute);
+  object-fit: cover;
+}
+.header__article {
+  @include s-position(absolute, middle, center);
+  color: white;
 }

@@ -9,6 +9,8 @@ var _SWebComponent2 = _interopRequireDefault(
   require("coffeekraken-sugar/js/core/SWebComponent")
 )
 
+var _html2canvas = _interopRequireDefault(require("html2canvas"))
+
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj }
 }
@@ -169,6 +171,16 @@ var Component =
               "componentMount",
               this
             ).call(this)
+
+            ;(0, _html2canvas.default)(this, {
+              logging: false
+            })
+              .then(function(canvas) {
+                document.body.appendChild(canvas)
+              })
+              .catch(function(error) {
+                console.warn(error)
+              })
           }
           /**
            * Component unmount
