@@ -2,7 +2,10 @@
   "extends": ["airbnb","prettier"],
   "rules": {
     "semi": ["error","never"],
-    "import/newline-after-import": "off"
+    "import/newline-after-import": "off",
+    "no-underscore-dangle": "off",
+    "dot-notation": "off",
+    "class-methods-use-this": "off"
   },
   "env": {
     "browser": true,

@@ -1,2 +1,2 @@
-import Component from "./js/Component"
-export default Component
+import SGlitchComponent from "./js/SGlitchComponent"
+export default SGlitchComponent

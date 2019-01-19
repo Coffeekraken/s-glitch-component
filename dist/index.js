@@ -5,12 +5,15 @@ Object.defineProperty(exports, "__esModule", {
 })
 exports.default = void 0
 
-var _Component = _interopRequireDefault(require("./js/Component"))
+var _SGlitchComponent = _interopRequireDefault(require("./js/SGlitchComponent"))
 
 function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : { default: obj }
 }
 
-var _default = _Component.default.define("s-component", _Component.default)
+var _default = _SGlitchComponent.default.define(
+  "s-glitch",
+  _SGlitchComponent.default
+)
 
 exports.default = _default
