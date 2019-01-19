@@ -12,13 +12,14 @@
 body {
 }
 
+s-glitch,
 .header {
-  position: relative;
-  @include s-ratio(16/9);
+  @include s-fit(absolute);
 }
 .header__img {
   @include s-fit(absolute);
-  object-fit: cover;
+  background-size: cover;
+  background-position: 50% 50%;
 }
 .header__article {
   @include s-position(absolute, middle, center);
