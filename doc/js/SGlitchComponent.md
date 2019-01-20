@@ -78,6 +78,14 @@ Type : **{ Mixed }**
 
 Default : **false**
 
+### waitOnImages
+
+Wait till images are fully loaded to render the glitch canvas
+
+Type : **{ [Boolean](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Boolean) }**
+
+Default : **true**
+
 ## Methods
 
 ### pause
@@ -97,3 +105,15 @@ Return **{ SGlitchComponent }** The component instance
 Check if the timeout is started
 
 Return **{ [Boolean](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Boolean) }** true if started, false if not
+
+### domUpdated
+
+Call this function when the dom has been upated to refresh the glitch canvas
+
+Return **{ [Promise](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Promise) }** A promise when the canvas has been updated
+
+## Events
+
+### ready
+
+Dispatched when the component is ready to accept inputs like "start", "pause", etc...
