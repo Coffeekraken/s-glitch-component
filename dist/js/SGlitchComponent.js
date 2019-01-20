@@ -31,6 +31,10 @@ var _isInViewport = _interopRequireDefault(
   require("coffeekraken-sugar/js/dom/isInViewport")
 )
 
+var _closest = _interopRequireDefault(
+  require("coffeekraken-sugar/js/dom/closest")
+)
+
 var _threeFull = require("three-full")
 
 var _GlitchPass = _interopRequireDefault(require("./GlitchPass"))
@@ -267,30 +271,41 @@ var SGlitchComponent =
                           this._initGlitchTimer()
 
                           if (
-                            !this.props.pauseWhenOut ||
-                            (0, _isInViewport.default)(this)
+                            !this.props.glitchOnHover &&
+                            (!this.props.pauseWhenOut ||
+                              (0, _isInViewport.default)(this))
                           ) {
                             this._startTimeout()
+                          } // init glitch on hover handler
+
+                          if (this.props.glitchOnHover) {
+                            this._addGlitchOnHoverHandler()
                           } // init hover handler
 
-                          if (this.props.pauseOnHover) {
+                          if (
+                            this.props.pauseOnHover &&
+                            !this.props.glitchOnHover
+                          ) {
                             this._addHoverHandler()
                           } // in viewport change detector
 
-                          if (this.props.pauseWhenOut) {
+                          if (
+                            this.props.pauseWhenOut &&
+                            !this.props.glitchOnHover
+                          ) {
                             this._addInViewportChangeDetector()
                           } // init the resize handler
 
                           this._addResizeHandler()
 
-                          _context.next = 19
+                          _context.next = 20
                           break
 
-                        case 17:
-                          _context.prev = 17
+                        case 18:
+                          _context.prev = 18
                           _context.t0 = _context["catch"](1)
 
-                        case 19:
+                        case 20:
                         case "end":
                           return _context.stop()
                       }
@@ -298,7 +313,7 @@ var SGlitchComponent =
                   },
                   _callee,
                   this,
-                  [[1, 17]]
+                  [[1, 18]]
                 )
               })
             )
@@ -330,7 +345,9 @@ var SGlitchComponent =
 
             this._removeHoverHandler()
 
-            this._removeInViewportChangeDetector() // destroy timers
+            this._removeInViewportChangeDetector()
+
+            this._removeGlitchOnHoverHandler() // destroy timers
 
             this._timeoutTimer.destroy()
 
@@ -353,13 +370,19 @@ var SGlitchComponent =
 
             switch (name) {
               case "pauseOnHover":
-                if (newVal) this._addHoverHandler()
+                if (newVal && !this.props.glitchOnHover) this._addHoverHandler()
                 else this._removeHoverHandler()
                 break
 
               case "pauseWhenOut":
-                if (newVal) this._addInViewportChangeDetector()
+                if (newVal && !this.props.glitchOnHover)
+                  this._addInViewportChangeDetector()
                 else this._removeInViewportChangeDetector()
+                break
+
+              case "glitchOnHover":
+                if (newVal) this._addGlitchOnHoverHandler()
+                else this._removeGlitchOnHoverHandler()
                 break
 
               default:
@@ -373,7 +396,7 @@ var SGlitchComponent =
         {
           key: "pause",
           value: function pause() {
-            this._timeoutTimer.pause()
+            this._pauseTimeout()
 
             return this
           }
@@ -400,24 +423,62 @@ var SGlitchComponent =
             return this._timeoutTimer.isStarted()
           }
           /**
+           * Add glitch on hover handler
+           */
+        },
+        {
+          key: "_addGlitchOnHoverHandler",
+          value: function _addGlitchOnHoverHandler() {
+            var _this = this
+
+            var $target =
+              typeof this.props.glitchOnHover === "string"
+                ? (0, _closest.default)(this, this.props.glitchOnHover)
+                : this
+            this._removeGlitchOnHoverFn = (0, _addEventListener.default)(
+              $target,
+              "mouseenter",
+              function(e) {
+                _this._startTimeout()
+              }
+            )
+            this._removeGlitchOnHoverOutFn = (0, _addEventListener.default)(
+              $target,
+              "mouseleave",
+              function(e) {
+                _this._pauseTimeout()
+              }
+            )
+          }
+          /**
+           * Remove glitch on hover handler
+           */
+        },
+        {
+          key: "_removeGlitchOnHoverHandler",
+          value: function _removeGlitchOnHoverHandler() {
+            if (this._removeGlitchOnHoverFn) this._removeGlitchOnHoverFn()
+            if (this._removeGlitchOnHoverOutFn) this._removeGlitchOnHoverOutFn()
+          }
+          /**
            * Add in viewport change detector
            */
         },
         {
           key: "_addInViewportChangeDetector",
           value: function _addInViewportChangeDetector() {
-            var _this = this
+            var _this2 = this
 
             this._inViewportChangeDetector = (0,
             _inViewportStatusChange.default)(
               this,
               function() {
                 // start the timeout again
-                _this._timeoutTimer.start()
+                _this2._startTimeout()
               },
               function() {
                 // pause the timeout
-                _this._timeoutTimer.pause()
+                _this2._pauseTimeout()
               }
             )
           }
@@ -432,7 +493,7 @@ var SGlitchComponent =
               this._inViewportChangeDetector.destroy()
             } // start the timeout again just in case
 
-            this._timeoutTimer.start()
+            this._startTimeout()
           }
           /**
            * Init hover handler
@@ -441,14 +502,14 @@ var SGlitchComponent =
         {
           key: "_addHoverHandler",
           value: function _addHoverHandler() {
-            var _this2 = this
+            var _this3 = this
 
             this._removeHoverHandlerFn = (0, _addEventListener.default)(
               this,
               "mouseenter",
               function() {
                 // pause the timeout
-                _this2._timeoutTimer.pause()
+                _this3._pauseTimeout()
               }
             )
             this._removeOutHandlerFn = (0, _addEventListener.default)(
@@ -456,7 +517,7 @@ var SGlitchComponent =
               "mouseleave",
               function() {
                 // start the timeout again
-                _this2._timeoutTimer.start()
+                _this3._startTimeout()
               }
             )
           }
@@ -477,7 +538,7 @@ var SGlitchComponent =
         {
           key: "_addResizeHandler",
           value: function _addResizeHandler() {
-            var _this3 = this
+            var _this4 = this
 
             this._removeResizeHandlerFn = (0, _addEventListener.default)(
               window,
@@ -493,31 +554,31 @@ var SGlitchComponent =
                         while (1) {
                           switch ((_context2.prev = _context2.next)) {
                             case 0:
-                              _this3._isResizing = true
+                              _this4._isResizing = true
 
-                              _this3._renderer.setSize(
-                                _this3.offsetWidth,
-                                _this3.offsetHeight
+                              _this4._renderer.setSize(
+                                _this4.offsetWidth,
+                                _this4.offsetHeight
                               )
 
                               _context2.next = 4
-                              return _this3._getHtml2Canvas()
+                              return _this4._getHtml2Canvas()
 
                             case 4:
                               canvas = _context2.sent
                               _context2.next = 7
-                              return _this3._loadTexturedMaterial(
+                              return _this4._loadTexturedMaterial(
                                 canvas.toDataURL()
                               )
 
                             case 7:
                               material = _context2.sent
-                              _this3._plane.material = material
+                              _this4._plane.material = material
 
-                              _this3._render()
+                              _this4._render()
 
                               setTimeout(function() {
-                                _this3._isResizing = false
+                                _this4._isResizing = false
                               })
 
                             case 11:
@@ -555,6 +616,14 @@ var SGlitchComponent =
 
             this._timeoutTimer.onTick(this._startGlitch.bind(this))
           }
+        },
+        {
+          key: "_pauseTimeout",
+          value: function _pauseTimeout() {
+            this._isTimeoutStarted = false
+
+            this._timeoutTimer.pause()
+          }
           /**
            * Start a timeout iteration that will start a glitch at his end
            */
@@ -570,6 +639,8 @@ var SGlitchComponent =
                 )
             )
 
+            this._isTimeoutStarted = true
+
             this._timeoutTimer.start()
           }
           /**
@@ -579,7 +650,7 @@ var SGlitchComponent =
         {
           key: "_initGlitchTimer",
           value: function _initGlitchTimer() {
-            var _this4 = this
+            var _this5 = this
 
             var duration =
               this.props.minDuration +
@@ -594,9 +665,9 @@ var SGlitchComponent =
             this._glitchTimer.onTick(this._render.bind(this))
 
             this._glitchTimer.onComplete(function() {
-              _this4.classList.remove("glitch")
+              _this5.classList.remove("glitch")
 
-              _this4._startTimeout()
+              if (_this5._isTimeoutStarted) _this5._startTimeout()
             })
           }
           /**
@@ -947,7 +1018,14 @@ var SGlitchComponent =
                * @prop
                * @type    {Boolean}
                */
-              pauseWhenOut: true
+              pauseWhenOut: true,
+
+              /**
+               * Specify if want to glitch onhover. If set a css selector, will take this as source of hover
+               * @prop
+               * @type    {Mixed}
+               */
+              glitchOnHover: false
             }
           }
           /**
@@ -961,10 +1039,10 @@ var SGlitchComponent =
           get: function get() {
             return [
               function() {
-                var _this5 = this
+                var _this6 = this
 
                 return new Promise(function(resolve) {
-                  if (_this5.ownerDocument === window.document) resolve()
+                  if (_this6.ownerDocument === window.document) resolve()
                 })
               }
             ]

@@ -5,6 +5,7 @@ import debounce from "coffeekraken-sugar/js/utils/functions/debounce"
 import addEventListener from "coffeekraken-sugar/js/dom/addEventListener"
 import inViewportStatusChange from "coffeekraken-sugar/js/dom/inViewportStatusChange"
 import isInViewport from "coffeekraken-sugar/js/dom/isInViewport"
+import closest from "coffeekraken-sugar/js/dom/closest"
 import {
   WebGLRenderer,
   OrthographicCamera,
@@ -86,7 +87,14 @@ export default class SGlitchComponent extends SWebComponent {
        * @prop
        * @type    {Boolean}
        */
-      pauseWhenOut: true
+      pauseWhenOut: true,
+
+      /**
+       * Specify if want to glitch onhover. If set a css selector, will take this as source of hover
+       * @prop
+       * @type    {Mixed}
+       */
+      glitchOnHover: false
     }
   }
 
@@ -154,17 +162,25 @@ export default class SGlitchComponent extends SWebComponent {
       this._initTimeoutTimer()
       this._initGlitchTimer()
 
-      if (!this.props.pauseWhenOut || isInViewport(this)) {
+      if (
+        !this.props.glitchOnHover &&
+        (!this.props.pauseWhenOut || isInViewport(this))
+      ) {
         this._startTimeout()
       }
 
+      // init glitch on hover handler
+      if (this.props.glitchOnHover) {
+        this._addGlitchOnHoverHandler()
+      }
+
       // init hover handler
-      if (this.props.pauseOnHover) {
+      if (this.props.pauseOnHover && !this.props.glitchOnHover) {
         this._addHoverHandler()
       }
 
       // in viewport change detector
-      if (this.props.pauseWhenOut) {
+      if (this.props.pauseWhenOut && !this.props.glitchOnHover) {
         this._addInViewportChangeDetector()
       }
 
@@ -189,6 +205,7 @@ export default class SGlitchComponent extends SWebComponent {
 
     this._removeHoverHandler()
     this._removeInViewportChangeDetector()
+    this._removeGlitchOnHoverHandler()
 
     // destroy timers
     this._timeoutTimer.destroy()
@@ -204,12 +221,17 @@ export default class SGlitchComponent extends SWebComponent {
     super.componentWillReceiveProp(name, newVal, oldVal)
     switch (name) {
       case "pauseOnHover":
-        if (newVal) this._addHoverHandler()
+        if (newVal && !this.props.glitchOnHover) this._addHoverHandler()
         else this._removeHoverHandler()
         break
       case "pauseWhenOut":
-        if (newVal) this._addInViewportChangeDetector()
+        if (newVal && !this.props.glitchOnHover)
+          this._addInViewportChangeDetector()
         else this._removeInViewportChangeDetector()
+        break
+      case "glitchOnHover":
+        if (newVal) this._addGlitchOnHoverHandler()
+        else this._removeGlitchOnHoverHandler()
         break
       default:
     }
@@ -220,7 +242,7 @@ export default class SGlitchComponent extends SWebComponent {
    * @return    {SGlitchComponent}    The component instance
    */
   pause() {
-    this._timeoutTimer.pause()
+    this._pauseTimeout()
     return this
   }
 
@@ -242,6 +264,39 @@ export default class SGlitchComponent extends SWebComponent {
   }
 
   /**
+   * Add glitch on hover handler
+   */
+  _addGlitchOnHoverHandler() {
+    const $target =
+      typeof this.props.glitchOnHover === "string"
+        ? closest(this, this.props.glitchOnHover)
+        : this
+
+    this._removeGlitchOnHoverFn = addEventListener(
+      $target,
+      "mouseenter",
+      () => {
+        this._startTimeout()
+      }
+    )
+    this._removeGlitchOnHoverOutFn = addEventListener(
+      $target,
+      "mouseleave",
+      () => {
+        this._pauseTimeout()
+      }
+    )
+  }
+
+  /**
+   * Remove glitch on hover handler
+   */
+  _removeGlitchOnHoverHandler() {
+    if (this._removeGlitchOnHoverFn) this._removeGlitchOnHoverFn()
+    if (this._removeGlitchOnHoverOutFn) this._removeGlitchOnHoverOutFn()
+  }
+
+  /**
    * Add in viewport change detector
    */
   _addInViewportChangeDetector() {
@@ -249,11 +304,11 @@ export default class SGlitchComponent extends SWebComponent {
       this,
       () => {
         // start the timeout again
-        this._timeoutTimer.start()
+        this._startTimeout()
       },
       () => {
         // pause the timeout
-        this._timeoutTimer.pause()
+        this._pauseTimeout()
       }
     )
   }
@@ -266,7 +321,7 @@ export default class SGlitchComponent extends SWebComponent {
       this._inViewportChangeDetector.destroy()
     }
     // start the timeout again just in case
-    this._timeoutTimer.start()
+    this._startTimeout()
   }
 
   /**
@@ -275,11 +330,11 @@ export default class SGlitchComponent extends SWebComponent {
   _addHoverHandler() {
     this._removeHoverHandlerFn = addEventListener(this, "mouseenter", () => {
       // pause the timeout
-      this._timeoutTimer.pause()
+      this._pauseTimeout()
     })
     this._removeOutHandlerFn = addEventListener(this, "mouseleave", () => {
       // start the timeout again
-      this._timeoutTimer.start()
+      this._startTimeout()
     })
   }
 
@@ -328,6 +383,11 @@ export default class SGlitchComponent extends SWebComponent {
     this._timeoutTimer.onTick(this._startGlitch.bind(this))
   }
 
+  _pauseTimeout() {
+    this._isTimeoutStarted = false
+    this._timeoutTimer.pause()
+  }
+
   /**
    * Start a timeout iteration that will start a glitch at his end
    */
@@ -338,6 +398,7 @@ export default class SGlitchComponent extends SWebComponent {
           Math.random() * (this.props.maxTimeout - this.props.minTimeout)
         )
     )
+    this._isTimeoutStarted = true
     this._timeoutTimer.start()
   }
 
@@ -356,7 +417,7 @@ export default class SGlitchComponent extends SWebComponent {
     this._glitchTimer.onTick(this._render.bind(this))
     this._glitchTimer.onComplete(() => {
       this.classList.remove("glitch")
-      this._startTimeout()
+      if (this._isTimeoutStarted) this._startTimeout()
     })
   }
 
