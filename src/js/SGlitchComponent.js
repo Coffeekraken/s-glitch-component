@@ -8,6 +8,8 @@ import inViewportStatusChange from "coffeekraken-sugar/js/dom/inViewportStatusCh
 import isInViewport from "coffeekraken-sugar/js/dom/isInViewport"
 import closest from "coffeekraken-sugar/js/dom/closest"
 import imagesLoaded from "coffeekraken-sugar/js/dom/imagesLoaded"
+import backgroundImageLoaded from "coffeekraken-sugar/js/dom/backgroundImageLoaded"
+import querySelectorAllWithStyle from "coffeekraken-sugar/js/dom/querySelectorAllWithStyle"
 import {
   WebGLRenderer,
   OrthographicCamera,
@@ -118,7 +120,22 @@ export default class SGlitchComponent extends SWebComponent {
         return new Promise(resolve => {
           if (this.ownerDocument !== window.document) return
           if (this.props.waitOnImages) {
-            resolve(imagesLoaded(this.querySelectorAll("img[src]")))
+            const $backgroundImageElms = querySelectorAllWithStyle(
+              "*",
+              {
+                backgroundImage: /^url/
+              },
+              {
+                rootNode: this
+              }
+            )
+            const imagesPromises = []
+            $backgroundImageElms.forEach($backgroundImageElm => {
+              imagesPromises.push(backgroundImageLoaded($backgroundImageElm))
+            })
+            imagesPromises.push(imagesLoaded(this.querySelectorAll("img[src]")))
+
+            resolve(Promise.all(imagesPromises))
             return
           }
           resolve()

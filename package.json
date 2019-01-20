@@ -1,6 +1,6 @@
 {
   "name": "coffeekraken-s-glitch-component",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Create a nice glitch effect on any HTMLElement",
   "main": "dist/index.js",
   "homepage": "http://coffeekraken.io",
@@ -73,7 +73,7 @@
     }
   },
   "dependencies": {
-    "coffeekraken-sugar": "^1.0.43",
+    "coffeekraken-sugar": "^1.0.44",
     "html2canvas": "^1.0.0-alpha.12",
     "three-full": "^11.3.2"
   },
