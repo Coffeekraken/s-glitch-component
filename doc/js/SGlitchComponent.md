@@ -70,6 +70,14 @@ Type : **{ [Boolean](https://developer.mozilla.org/fr/docs/Web/JavaScript/Refere
 
 Default : **true**
 
+### glitchOnHover
+
+Specify if want to glitch onhover. If set a css selector, will take this as source of hover
+
+Type : **{ Mixed }**
+
+Default : **false**
+
 ## Methods
 
 ### pause
