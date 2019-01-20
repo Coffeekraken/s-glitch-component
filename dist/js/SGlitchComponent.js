@@ -43,6 +43,14 @@ var _imagesLoaded = _interopRequireDefault(
   require("coffeekraken-sugar/js/dom/imagesLoaded")
 )
 
+var _backgroundImageLoaded = _interopRequireDefault(
+  require("coffeekraken-sugar/js/dom/backgroundImageLoaded")
+)
+
+var _querySelectorAllWithStyle = _interopRequireDefault(
+  require("coffeekraken-sugar/js/dom/querySelectorAllWithStyle")
+)
+
 var _threeFull = require("three-full")
 
 var _GlitchPass = _interopRequireDefault(require("./GlitchPass"))
@@ -310,6 +318,7 @@ var SGlitchComponent =
                            * @name    ready
                            * Dispatched when the component is ready to accept inputs like "start", "pause", etc...
                            */
+
                           ;(0, _dispatchEvent.default)(this, "ready")
                           _context.next = 21
                           break
@@ -437,7 +446,7 @@ var SGlitchComponent =
           }
           /**
            * Call this function when the dom has been upated to refresh the glitch canvas
-           * @return    {Promise}    A promise when the canvas has been updated
+           * @return    {Promise}    A promise when the canvas has been updated
            */
         },
         {
@@ -447,7 +456,7 @@ var SGlitchComponent =
           }
           /**
            * Update the canvas that will be glitched with the current dom
-           * @return    {Promise}    A promise when the canvas has been updated
+           * @return    {Promise}    A promise when the canvas has been updated
            */
         },
         {
@@ -1111,11 +1120,28 @@ var SGlitchComponent =
                   if (_this6.ownerDocument !== window.document) return
 
                   if (_this6.props.waitOnImages) {
-                    resolve(
+                    var $backgroundImageElms = (0,
+                    _querySelectorAllWithStyle.default)(
+                      "*",
+                      {
+                        backgroundImage: /^url/
+                      },
+                      {
+                        rootNode: _this6
+                      }
+                    )
+                    var imagesPromises = []
+                    $backgroundImageElms.forEach(function($backgroundImageElm) {
+                      imagesPromises.push(
+                        (0, _backgroundImageLoaded.default)($backgroundImageElm)
+                      )
+                    })
+                    imagesPromises.push(
                       (0, _imagesLoaded.default)(
                         _this6.querySelectorAll("img[src]")
                       )
                     )
+                    resolve(Promise.all(imagesPromises))
                     return
                   }
 
