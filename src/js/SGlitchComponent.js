@@ -3,9 +3,11 @@ import html2canvas from "html2canvas"
 import STimer from "coffeekraken-sugar/js/classes/STimer"
 import debounce from "coffeekraken-sugar/js/utils/functions/debounce"
 import addEventListener from "coffeekraken-sugar/js/dom/addEventListener"
+import dispatchEvent from "coffeekraken-sugar/js/dom/dispatchEvent"
 import inViewportStatusChange from "coffeekraken-sugar/js/dom/inViewportStatusChange"
 import isInViewport from "coffeekraken-sugar/js/dom/isInViewport"
 import closest from "coffeekraken-sugar/js/dom/closest"
+import imagesLoaded from "coffeekraken-sugar/js/dom/imagesLoaded"
 import {
   WebGLRenderer,
   OrthographicCamera,
@@ -94,7 +96,14 @@ export default class SGlitchComponent extends SWebComponent {
        * @prop
        * @type    {Mixed}
        */
-      glitchOnHover: false
+      glitchOnHover: false,
+
+      /**
+       * Wait till images are fully loaded to render the glitch canvas
+       * @prop
+       * @type    {Boolean}
+       */
+      waitOnImages: true
     }
   }
 
@@ -107,7 +116,12 @@ export default class SGlitchComponent extends SWebComponent {
     return [
       function() {
         return new Promise(resolve => {
-          if (this.ownerDocument === window.document) resolve()
+          if (this.ownerDocument !== window.document) return
+          if (this.props.waitOnImages) {
+            resolve(imagesLoaded(this.querySelectorAll("img[src]")))
+            return
+          }
+          resolve()
         })
       }
     ]
@@ -186,6 +200,13 @@ export default class SGlitchComponent extends SWebComponent {
 
       // init the resize handler
       this._addResizeHandler()
+
+      /**
+       * @event
+       * @name    ready
+       * Dispatched when the component is ready to accept inputs like "start", "pause", etc...
+       */
+      dispatchEvent(this, "ready")
     } catch (e) {
       // do nothing here
     }
@@ -260,7 +281,27 @@ export default class SGlitchComponent extends SWebComponent {
    * @return    {Boolean}    true if started, false if not
    */
   isStarted() {
-    return this._timeoutTimer.isStarted()
+    return this._isTimeoutStarted
+  }
+
+  /**
+   * Call this function when the dom has been upated to refresh the glitch canvas
+   * @return    {Promise}    A promise when the canvas has been updated
+   */
+  domUpdated() {
+    return this._updateCanvas()
+  }
+
+  /**
+   * Update the canvas that will be glitched with the current dom
+   * @return    {Promise}    A promise when the canvas has been updated
+   */
+  async _updateCanvas() {
+    const canvas = await this._getHtml2Canvas()
+    const material = await this._loadTexturedMaterial(canvas.toDataURL())
+    this._plane.material = material
+    this._render()
+    return true
   }
 
   /**
@@ -356,10 +397,7 @@ export default class SGlitchComponent extends SWebComponent {
       debounce(async () => {
         this._isResizing = true
         this._renderer.setSize(this.offsetWidth, this.offsetHeight)
-        const canvas = await this._getHtml2Canvas()
-        const material = await this._loadTexturedMaterial(canvas.toDataURL())
-        this._plane.material = material
-        this._render()
+        this._updateCanvas()
         setTimeout(() => {
           this._isResizing = false
         })

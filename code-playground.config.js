@@ -3,7 +3,7 @@ module.exports = {
   port: 3000,
 
   // title
-  title: "s-{component-name}-component",
+  title: "s-glitch-component",
 
   // layout
   layout: "right",

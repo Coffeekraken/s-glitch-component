@@ -23,6 +23,10 @@ var _addEventListener = _interopRequireDefault(
   require("coffeekraken-sugar/js/dom/addEventListener")
 )
 
+var _dispatchEvent = _interopRequireDefault(
+  require("coffeekraken-sugar/js/dom/dispatchEvent")
+)
+
 var _inViewportStatusChange = _interopRequireDefault(
   require("coffeekraken-sugar/js/dom/inViewportStatusChange")
 )
@@ -33,6 +37,10 @@ var _isInViewport = _interopRequireDefault(
 
 var _closest = _interopRequireDefault(
   require("coffeekraken-sugar/js/dom/closest")
+)
+
+var _imagesLoaded = _interopRequireDefault(
+  require("coffeekraken-sugar/js/dom/imagesLoaded")
 )
 
 var _threeFull = require("three-full")
@@ -297,15 +305,20 @@ var SGlitchComponent =
                           } // init the resize handler
 
                           this._addResizeHandler()
-
-                          _context.next = 20
+                          /**
+                           * @event
+                           * @name    ready
+                           * Dispatched when the component is ready to accept inputs like "start", "pause", etc...
+                           */
+                          ;(0, _dispatchEvent.default)(this, "ready")
+                          _context.next = 21
                           break
 
-                        case 18:
-                          _context.prev = 18
+                        case 19:
+                          _context.prev = 19
                           _context.t0 = _context["catch"](1)
 
-                        case 20:
+                        case 21:
                         case "end":
                           return _context.stop()
                       }
@@ -313,7 +326,7 @@ var SGlitchComponent =
                   },
                   _callee,
                   this,
-                  [[1, 18]]
+                  [[1, 19]]
                 )
               })
             )
@@ -420,8 +433,69 @@ var SGlitchComponent =
         {
           key: "isStarted",
           value: function isStarted() {
-            return this._timeoutTimer.isStarted()
+            return this._isTimeoutStarted
           }
+          /**
+           * Call this function when the dom has been upated to refresh the glitch canvas
+           * @return    {Promise}    A promise when the canvas has been updated
+           */
+        },
+        {
+          key: "domUpdated",
+          value: function domUpdated() {
+            return this._updateCanvas()
+          }
+          /**
+           * Update the canvas that will be glitched with the current dom
+           * @return    {Promise}    A promise when the canvas has been updated
+           */
+        },
+        {
+          key: "_updateCanvas",
+          value: (function() {
+            var _updateCanvas2 = _asyncToGenerator(
+              /*#__PURE__*/
+              regeneratorRuntime.mark(function _callee2() {
+                var canvas, material
+                return regeneratorRuntime.wrap(
+                  function _callee2$(_context2) {
+                    while (1) {
+                      switch ((_context2.prev = _context2.next)) {
+                        case 0:
+                          _context2.next = 2
+                          return this._getHtml2Canvas()
+
+                        case 2:
+                          canvas = _context2.sent
+                          _context2.next = 5
+                          return this._loadTexturedMaterial(canvas.toDataURL())
+
+                        case 5:
+                          material = _context2.sent
+                          this._plane.material = material
+
+                          this._render()
+
+                          return _context2.abrupt("return", true)
+
+                        case 9:
+                        case "end":
+                          return _context2.stop()
+                      }
+                    }
+                  },
+                  _callee2,
+                  this
+                )
+              })
+            )
+
+            function _updateCanvas() {
+              return _updateCanvas2.apply(this, arguments)
+            }
+
+            return _updateCanvas
+          })()
           /**
            * Add glitch on hover handler
            */
@@ -438,14 +512,14 @@ var SGlitchComponent =
             this._removeGlitchOnHoverFn = (0, _addEventListener.default)(
               $target,
               "mouseenter",
-              function(e) {
+              function() {
                 _this._startTimeout()
               }
             )
             this._removeGlitchOnHoverOutFn = (0, _addEventListener.default)(
               $target,
               "mouseleave",
-              function(e) {
+              function() {
                 _this._pauseTimeout()
               }
             )
@@ -547,12 +621,11 @@ var SGlitchComponent =
                 /*#__PURE__*/
                 _asyncToGenerator(
                   /*#__PURE__*/
-                  regeneratorRuntime.mark(function _callee2() {
-                    var canvas, material
+                  regeneratorRuntime.mark(function _callee3() {
                     return regeneratorRuntime.wrap(
-                      function _callee2$(_context2) {
+                      function _callee3$(_context3) {
                         while (1) {
-                          switch ((_context2.prev = _context2.next)) {
+                          switch ((_context3.prev = _context3.next)) {
                             case 0:
                               _this4._isResizing = true
 
@@ -561,33 +634,19 @@ var SGlitchComponent =
                                 _this4.offsetHeight
                               )
 
-                              _context2.next = 4
-                              return _this4._getHtml2Canvas()
-
-                            case 4:
-                              canvas = _context2.sent
-                              _context2.next = 7
-                              return _this4._loadTexturedMaterial(
-                                canvas.toDataURL()
-                              )
-
-                            case 7:
-                              material = _context2.sent
-                              _this4._plane.material = material
-
-                              _this4._render()
+                              _this4._updateCanvas()
 
                               setTimeout(function() {
                                 _this4._isResizing = false
                               })
 
-                            case 11:
+                            case 4:
                             case "end":
-                              return _context2.stop()
+                              return _context3.stop()
                           }
                         }
                       },
-                      _callee2,
+                      _callee3,
                       this
                     )
                   })
@@ -701,14 +760,14 @@ var SGlitchComponent =
           value: (function() {
             var _getHtml2Canvas2 = _asyncToGenerator(
               /*#__PURE__*/
-              regeneratorRuntime.mark(function _callee3() {
+              regeneratorRuntime.mark(function _callee4() {
                 var canvas
                 return regeneratorRuntime.wrap(
-                  function _callee3$(_context3) {
+                  function _callee4$(_context4) {
                     while (1) {
-                      switch ((_context3.prev = _context3.next)) {
+                      switch ((_context4.prev = _context4.next)) {
                         case 0:
-                          _context3.next = 2
+                          _context4.next = 2
                           return (0, _html2canvas.default)(this, {
                             logging: false,
                             useCORS: true,
@@ -721,16 +780,16 @@ var SGlitchComponent =
                           })
 
                         case 2:
-                          canvas = _context3.sent
-                          return _context3.abrupt("return", canvas)
+                          canvas = _context4.sent
+                          return _context4.abrupt("return", canvas)
 
                         case 4:
                         case "end":
-                          return _context3.stop()
+                          return _context4.stop()
                       }
                     }
                   },
-                  _callee3,
+                  _callee4,
                   this
                 )
               })
@@ -753,7 +812,7 @@ var SGlitchComponent =
           value: (function() {
             var _initScene2 = _asyncToGenerator(
               /*#__PURE__*/
-              regeneratorRuntime.mark(function _callee4(image) {
+              regeneratorRuntime.mark(function _callee5(image) {
                 var camera,
                   scene,
                   texturedMaterial,
@@ -762,9 +821,9 @@ var SGlitchComponent =
                   glitchDtSize,
                   glitchPass
                 return regeneratorRuntime.wrap(
-                  function _callee4$(_context4) {
+                  function _callee5$(_context5) {
                     while (1) {
-                      switch ((_context4.prev = _context4.next)) {
+                      switch ((_context5.prev = _context5.next)) {
                         case 0:
                           this._renderer = new _threeFull.WebGLRenderer()
 
@@ -791,11 +850,11 @@ var SGlitchComponent =
 
                           scene = new _threeFull.Scene()
                           scene.add(camera)
-                          _context4.next = 10
+                          _context5.next = 10
                           return this._loadTexturedMaterial(image)
 
                         case 10:
-                          texturedMaterial = _context4.sent
+                          texturedMaterial = _context5.sent
                           // plane
                           this._plane = new _threeFull.Mesh(
                             new _threeFull.PlaneGeometry(
@@ -830,18 +889,18 @@ var SGlitchComponent =
 
                           this._composer.addPass(glitchPass) // resolve the init scene
 
-                          return _context4.abrupt(
+                          return _context5.abrupt(
                             "return",
                             this._renderer.domElement
                           )
 
                         case 27:
                         case "end":
-                          return _context4.stop()
+                          return _context5.stop()
                       }
                     }
                   },
-                  _callee4,
+                  _callee5,
                   this
                 )
               })
@@ -875,31 +934,31 @@ var SGlitchComponent =
           value: (function() {
             var _loadTexturedMaterial2 = _asyncToGenerator(
               /*#__PURE__*/
-              regeneratorRuntime.mark(function _callee5(image) {
+              regeneratorRuntime.mark(function _callee6(image) {
                 var texture, texturedMaterial
                 return regeneratorRuntime.wrap(
-                  function _callee5$(_context5) {
+                  function _callee6$(_context6) {
                     while (1) {
-                      switch ((_context5.prev = _context5.next)) {
+                      switch ((_context6.prev = _context6.next)) {
                         case 0:
-                          _context5.next = 2
+                          _context6.next = 2
                           return this._loadTexture(image)
 
                         case 2:
-                          texture = _context5.sent
+                          texture = _context6.sent
                           texturedMaterial = new _threeFull.MeshBasicMaterial({
                             map: texture
                           })
                           texturedMaterial.map.needsUpdate = true
-                          return _context5.abrupt("return", texturedMaterial)
+                          return _context6.abrupt("return", texturedMaterial)
 
                         case 6:
                         case "end":
-                          return _context5.stop()
+                          return _context6.stop()
                       }
                     }
                   },
-                  _callee5,
+                  _callee6,
                   this
                 )
               })
@@ -1025,7 +1084,14 @@ var SGlitchComponent =
                * @prop
                * @type    {Mixed}
                */
-              glitchOnHover: false
+              glitchOnHover: false,
+
+              /**
+               * Wait till images are fully loaded to render the glitch canvas
+               * @prop
+               * @type    {Boolean}
+               */
+              waitOnImages: true
             }
           }
           /**
@@ -1042,7 +1108,18 @@ var SGlitchComponent =
                 var _this6 = this
 
                 return new Promise(function(resolve) {
-                  if (_this6.ownerDocument === window.document) resolve()
+                  if (_this6.ownerDocument !== window.document) return
+
+                  if (_this6.props.waitOnImages) {
+                    resolve(
+                      (0, _imagesLoaded.default)(
+                        _this6.querySelectorAll("img[src]")
+                      )
+                    )
+                    return
+                  }
+
+                  resolve()
                 })
               }
             ]

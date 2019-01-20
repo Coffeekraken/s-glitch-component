@@ -80,6 +80,17 @@ Then simply use it inside your html like so:
 </s-glitch>
 ```
 
+<a id="readme-dom-updated"></a>
+
+## Dom updated
+
+When the DOM has been updated, you'll need to call the `domUpdated` function to refresh the glitch canvas like so:
+
+```js
+$glitchElm = document.querySelector("s-glitch")
+$glitchElm.domUpdated()
+```
+
 <a id="readme-browsers-support"></a>
 
 ## Browsers support
